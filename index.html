@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F1F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17121A" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Daily Lean">
+<title>Daily Lean — core, legs & arms</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F1F4; --bg-glass:rgba(246,241,244,.86); --surface:#FFFFFF; --sunk:#EFE7EC;
+  --ink:#211A26; --muted:#6D6272; --line:#E6DCE2;
+  --berry:#B3305F; --berry-soft:#F8E1EA; --on-berry:#FFFFFF;
+  --done:#2F7A6F; --done-soft:#DCEFEA;
+  --core:#B3305F; --legs:#6B4BA6; --arms:#B85A14; --cardio:#2F7A6F; --stretch:#56697F;
+  --radius-lg:22px; --radius:16px; --radius-sm:11px;
+  box-sizing:border-box;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#17121A; --bg-glass:rgba(23,18,26,.86); --surface:#221B26; --sunk:#1C161F;
+    --ink:#F4ECF1; --muted:#B3A7B8; --line:#352B3A;
+    --berry:#F0729F; --berry-soft:#3B2130; --on-berry:#1B1016;
+    --done:#5CC2B2; --done-soft:#1B3531;
+    --core:#F0729F; --legs:#B39AEA; --arms:#EFA25F; --cardio:#5CC2B2; --stretch:#9DB0C7;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17121A; --bg-glass:rgba(23,18,26,.86); --surface:#221B26; --sunk:#1C161F;
+  --ink:#F4ECF1; --muted:#B3A7B8; --line:#352B3A;
+  --berry:#F0729F; --berry-soft:#3B2130; --on-berry:#1B1016;
+  --done:#5CC2B2; --done-soft:#1B3531;
+  --core:#F0729F; --legs:#B39AEA; --arms:#EFA25F; --cardio:#5CC2B2; --stretch:#9DB0C7;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent}
+body.timer-open{padding-bottom:150px}
+h1,h2,h3{font-family:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;line-height:1.05;margin:0}
+button{font:inherit;color:inherit;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+
+/* ---------- Sticky top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg-glass);
+  -webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);
+  padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid transparent;transition:border-color .2s}
+.topbar.scrolled{border-bottom-color:var(--line)}
+.topbar .wrap{padding-top:10px;padding-bottom:10px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.day-btn{border:0;background:transparent;border-radius:14px;min-height:56px;padding:6px 0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.day-btn .d{font-size:12px;color:var(--muted)}
+.day-btn .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:19px;line-height:1.1}
+.day-btn .mark{width:6px;height:6px;border-radius:50%;margin-top:3px;background:transparent}
+.day-btn.today .mark{background:var(--berry)}
+.day-btn.complete .mark{background:var(--done);width:14px;border-radius:3px}
+.day-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.day-btn[aria-pressed="true"] .d{color:var(--bg);opacity:.75}
+.day-btn[aria-pressed="true"].today .mark{background:var(--berry)}
+.mini{display:flex;align-items:center;gap:10px;margin-top:9px}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--berry);border-radius:99px;transition:width .4s ease}
+.bar.full span{background:var(--done)}
+.count{font-size:14px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ---------- Hero ---------- */
+.hero{padding:22px 0 8px}
+.when{color:var(--muted);margin:0 0 8px;font-size:15px}
+.hero h1{font-size:clamp(42px,12.5vw,84px);font-weight:800;letter-spacing:-.035em;
+  font-variation-settings:"opsz" 96;text-wrap:balance}
+.focus{font-size:17px;margin:14px 0 0;max-width:36em;color:var(--ink)}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:0;list-style:none}
+.facts li{background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:14.5px}
+.facts b{font-family:"Bricolage Grotesque",sans-serif;font-size:16px;margin-right:3px}
+
+/* ---------- Level selector ---------- */
+.level{margin:22px 0 6px}
+.level-label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--sunk);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;min-height:44px;border-radius:11px;cursor:pointer;font-weight:700;font-size:15px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 0 var(--line),0 2px 8px rgba(33,26,38,.08)}
+
+.gear{margin:14px 0 0;font-size:15px;color:var(--muted);max-width:36em}
+.quiet{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:12px 0 0;padding:12px 14px;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:14px;cursor:pointer;min-height:56px}
+.quiet-text{display:flex;flex-direction:column;line-height:1.3}
+.quiet-text span{font-size:14px;color:var(--muted);margin-top:2px}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:32px;margin:0;border-radius:99px;background:var(--line);
+  position:relative;cursor:pointer;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch:checked{background:var(--done)}
+.switch:checked::after{transform:translateX(20px)}
+.done-banner{display:none;margin:18px 0 0;padding:16px 18px;border-radius:var(--radius);background:var(--done-soft);
+  border:1.5px solid var(--done);font-weight:700}
+.done-banner.show{display:block;animation:pop .45s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- Blocks ---------- */
+.block{margin:30px 0 0}
+.block-head{margin:0 0 12px;padding:0 2px}
+.block-head .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.block-head h2{font-size:25px;font-weight:700;letter-spacing:-.01em}
+.block-head .tally{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.block-head .meta{font-size:14.5px;color:var(--muted);margin:4px 0 0}
+.list{display:flex;flex-direction:column;gap:10px}
+
+.ex{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);
+  border-left:5px solid var(--tc);transition:background .2s,border-color .2s}
+.ex.is-done{background:var(--done-soft);border-color:var(--done)}
+.ex-main{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px 14px 12px 10px}
+.check-wrap{display:grid;place-items:center;width:44px;height:44px;cursor:pointer;border-radius:12px}
+.check{appearance:none;-webkit-appearance:none;width:28px;height:28px;margin:0;border:2px solid var(--muted);
+  border-radius:9px;cursor:pointer;display:grid;place-items:center;background:var(--surface)}
+.check:checked{background:var(--done);border-color:var(--done)}
+.check:checked::after{content:"";width:8px;height:14px;border:solid var(--surface);border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.ex-text{min-width:0}
+.ex-name{font-weight:700;font-size:17px;line-height:1.25;margin:0}
+.ex.is-done .ex-name{text-decoration:line-through;text-decoration-thickness:2px;color:var(--muted)}
+.tag{display:inline-block;font-size:12.5px;font-weight:700;color:var(--tc);margin-top:3px}
+.amount{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:18px;text-align:right;line-height:1.15;max-width:7.5em}
+.ex-actions{display:grid;grid-template-columns:1fr;gap:8px;padding:0 14px 12px 66px}
+.ex-actions.two{grid-template-columns:1fr 1fr}
+.btn{border:1.5px solid var(--line);background:transparent;border-radius:var(--radius-sm);min-height:42px;
+  padding:6px 12px;cursor:pointer;font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.primary{background:var(--berry-soft);border-color:transparent;color:var(--berry)}
+.btn.running{background:var(--berry);color:var(--on-berry)}
+@media (hover:hover){.btn:hover{border-color:var(--ink)}.btn.primary:hover{border-color:var(--berry)}}
+
+.how{overflow:hidden;display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.how.open{grid-template-rows:1fr}
+.how > div{min-height:0}
+.how-inner{margin:0 14px 14px;padding:14px 16px;background:var(--sunk);border-radius:var(--radius-sm)}
+.steps{list-style:none;margin:0 0 10px;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:26px 1fr;gap:10px;margin-bottom:8px}
+.steps li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);
+  font-size:13px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.how p{margin:8px 0 0;font-size:15px}
+.how a{color:var(--berry);font-weight:700;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.how a svg{width:14px;height:14px;flex:none}
+
+/* ---------- Notes ---------- */
+.notes{margin:40px 0 0;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius-lg)}
+.notes summary{list-style:none;cursor:pointer;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.notes summary::-webkit-details-marker{display:none}
+.notes summary h2{font-size:22px}
+.notes summary .chev{transition:transform .2s;flex:none}
+.notes[open] summary .chev{transform:rotate(180deg)}
+.notes .body{padding:0 20px 8px}
+.notes p{margin:0 0 14px;max-width:38em}
+.foot{padding:26px 0 40px;text-align:center}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:44px;padding:0 8px}
+
+/* ---------- Timer sheet ---------- */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;transform:translateY(110%);transition:transform .3s ease;
+  padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.sheet.open{transform:none}
+.sheet-card{max-width:520px;margin:0 auto;background:var(--ink);color:var(--bg);border-radius:var(--radius-lg);
+  padding:14px 16px 16px;box-shadow:0 10px 40px rgba(0,0,0,.28)}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sheet-name{font-weight:700;font-size:15px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-time{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.sheet-bar{height:6px;border-radius:99px;background:rgba(127,127,127,.35);overflow:hidden;margin:12px 0}
+.sheet-bar span{display:block;height:100%;background:var(--berry);width:100%;transition:width 1s linear}
+.sheet-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet-btns button{min-height:46px;border-radius:12px;border:0;font-weight:700;cursor:pointer}
+.sheet-btns .pause{background:var(--berry);color:var(--on-berry)}
+.sheet-btns .stop{background:rgba(127,127,127,.25);color:var(--bg)}
+
+/* ---------- Small screens ---------- */
+@media (max-width:420px){
+  .wrap{padding:0 12px}
+  .week{gap:3px}
+  .day-btn{min-height:52px;border-radius:12px}
+  .day-btn .n{font-size:17px}
+  .ex-main{grid-template-columns:auto 1fr;gap:8px;padding:10px 12px 10px 6px}
+  .amount{grid-column:2;text-align:left;font-size:16px;max-width:none;margin-top:-4px}
+  .ex-actions{padding:0 12px 12px 12px}
+  .how-inner{margin:0 12px 12px;padding:12px 14px}
+  .block-head h2{font-size:23px}
+}
+@media (min-width:721px){
+  .hero{padding-top:36px}
+  .ex-actions{grid-template-columns:auto;justify-content:start;display:flex}
+  .ex-actions .btn{padding:6px 16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="wrap">
+    <nav class="week" id="week" aria-label="Choose a day"></nav>
+    <div class="mini">
+      <div class="bar" id="bar" role="progressbar" aria-label="Today's progress" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+      <div class="count" id="count"></div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <header class="hero">
+    <p class="when" id="when"></p>
+    <h1 id="title"></h1>
+    <p class="focus" id="focus"></p>
+    <ul class="facts" id="facts"></ul>
+    <p class="gear">Home workout, no gym needed. You'll need a mat or towel, a sturdy chair, and a wall.</p>
+
+    <div class="level">
+      <span class="level-label" id="levelLabel">Your level</span>
+      <div class="seg" role="group" aria-labelledby="levelLabel">
+        <button data-level="1">Beginner</button>
+        <button data-level="2">Intermediate</button>
+        <button data-level="3">Advanced</button>
+      </div>
+    </div>
+
+    <label class="quiet">
+      <span class="quiet-text"><strong>No-jump mode</strong><span>Quieter for condos and apartments, and easier on your knees</span></span>
+      <input type="checkbox" id="quietToggle" class="switch">
+    </label>
+
+    <div class="done-banner" id="doneBanner" role="status">Workout finished. Drink some water and stretch — see you tomorrow.</div>
+  </header>
+
+  <div id="blocks"></div>
+
+  <details class="notes">
+    <summary><h2>Getting lean, honestly</h2>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+    <div class="body">
+      <p><strong>You can't burn fat from one spot.</strong> Crunches build your abs, but the fat on top comes off from your whole body over time. That's why every day mixes core, legs, arms and a cardio finisher.</p>
+      <p><strong>Food and sleep do most of the work.</strong> Eat mostly whole foods, get protein at each meal, drink plenty of water, and aim for 7–9 hours of sleep. Walking more on top of this helps a lot.</p>
+      <p><strong>Form beats speed.</strong> Slow, controlled reps work the muscle better and keep your joints safe. If something hurts sharply, stop and use the easier version.</p>
+      <p><strong>Move up a level</strong> when the current one feels easy for a full week. Feeling sore for a day or two is normal; pain in joints is not. If you have a health condition or are pregnant, check with a doctor first.</p>
+    </div>
+  </details>
+
+  <div class="foot"><button class="reset" id="reset">Clear this week's checkmarks</button></div>
+</main>
+
+<div class="sheet" id="sheet" aria-live="polite">
+  <div class="sheet-card">
+    <div class="sheet-top">
+      <div class="sheet-name" id="sheetName"></div>
+      <div class="sheet-time" id="sheetTime">0:00</div>
+    </div>
+    <div class="sheet-bar"><span id="sheetBar"></span></div>
+    <div class="sheet-btns">
+      <button class="pause" id="sheetPause">Pause</button>
+      <button class="stop" id="sheetStop">Stop</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Exercise library ---------- */
+const EX = {
+  march:{n:"Marching in place",t:"Cardio",s:["Stand tall and lift one knee to hip height.","Swing the opposite arm forward.","Switch legs at a steady rhythm."],tip:"Keep breathing easily — this is just to warm up.",e:"Lift knees lower."},
+  armcircle:{n:"Arm circles",t:"Arms",s:["Stretch your arms straight out to the sides.","Make small circles forward, slowly making them bigger.","Halfway through, switch to circling backward."],tip:"Keep shoulders down, away from your ears.",e:"Make the circles smaller."},
+  hipcircle:{n:"Hip circles",t:"Legs",s:["Stand with feet hip-width apart, hands on hips.","Draw big circles with your hips.","Switch direction halfway."],tip:"Keep your upper body still.",e:"Hold a wall for balance."},
+  squat:{n:"Bodyweight squats",t:"Legs",s:["Stand with feet shoulder-width apart, toes slightly out.","Push your hips back and bend your knees like sitting in a chair.","Go down until thighs are about parallel to the floor.","Press through your heels to stand up and squeeze your glutes."],tip:"Knees follow the direction of your toes; chest stays up.",e:"Squat down to a chair and stand back up."},
+  bridge:{n:"Glute bridges",t:"Legs",s:["Lie on your back, knees bent, feet flat and hip-width apart.","Press through your heels and lift your hips until your body is a straight line from knees to shoulders.","Squeeze your glutes at the top for a second.","Lower slowly."],tip:"Don't arch your lower back — the lift comes from your glutes.",e:"Make the movement smaller."},
+  kneepush:{n:"Knee push-ups",t:"Arms",s:["Start on hands and knees, hands slightly wider than shoulders.","Walk your hands forward so your body is straight from knees to head.","Bend your elbows to lower your chest toward the floor.","Push back up."],tip:"Elbows point back at about 45°, not straight out.",e:"Do push-ups against a wall or kitchen counter."},
+  pushup:{n:"Push-ups",t:"Arms",s:["Start in a high plank, hands under shoulders.","Keep your body in one straight line.","Lower your chest close to the floor.","Push the floor away to come back up."],tip:"Squeeze your glutes and belly so your hips don't sag.",e:"Drop to your knees."},
+  dip:{n:"Tricep dips (chair)",t:"Arms",s:["Push a sturdy chair without wheels against a wall, then sit on the edge with hands gripping beside your hips.","Slide your hips off the front, feet flat and knees bent.","Bend your elbows straight back to lower down.","Press back up until arms are straight."],tip:"Keep your back close to the chair and shoulders down.",e:"Move your feet closer to the chair, or do them on the edge of your bed or sofa."},
+  plank:{n:"Forearm plank",t:"Core",s:["Place forearms on the floor, elbows under shoulders.","Step your feet back so your body is a straight line.","Tighten your belly and squeeze your glutes.","Hold and breathe steadily."],tip:"Don't let your hips drop or pike up.",e:"Hold it on your knees."},
+  bicycle:{n:"Bicycle crunches",t:"Core",s:["Lie on your back, hands lightly behind your head, legs lifted.","Bring your right elbow toward your left knee as the right leg extends.","Switch sides in a pedaling motion.","Count each side as one rep."],tip:"Go slow and twist from your ribs — don't pull your neck.",e:"Keep the extended foot on the floor."},
+  rlunge:{n:"Reverse lunges",t:"Legs",s:["Stand tall, feet hip-width apart.","Step one foot back and lower until both knees bend about 90°.","Front knee stays over your ankle.","Push through the front heel to return, then switch legs."],tip:"Keep most of your weight on the front leg.",e:"Hold a wall and make the lunge shallower."},
+  sumo:{n:"Sumo squats",t:"Legs",s:["Stand with feet wider than shoulders, toes turned out.","Keep your chest tall and lower your hips straight down.","Push your knees out over your toes.","Squeeze inner thighs and glutes to stand."],tip:"Great for inner thighs — go as low as feels good.",e:"Shorter range of motion."},
+  shouldertap:{n:"Plank shoulder taps",t:"Arms",s:["Start in a high plank, feet a bit wider than hips.","Lift one hand and tap the opposite shoulder.","Place it back down and switch.","Keep your hips as still as possible."],tip:"Widen your feet to stop your hips rocking.",e:"Do it from your knees."},
+  superman:{n:"Supermans",t:"Core",s:["Lie face down, arms stretched overhead.","Lift your arms, chest and legs a few inches off the floor.","Hold for 2 seconds.","Lower slowly."],tip:"Look at the floor to keep your neck relaxed.",e:"Lift only arms, then only legs."},
+  deadbug:{n:"Dead bugs",t:"Core",s:["Lie on your back, arms pointing to the ceiling, knees bent at 90° above hips.","Press your lower back into the floor.","Slowly lower your right arm and left leg toward the floor.","Return and switch sides."],tip:"If your lower back lifts, don't lower as far.",e:"Move only the legs."},
+  sideplank:{n:"Side plank",t:"Core",s:["Lie on your side, elbow under your shoulder.","Stack your feet and lift your hips so your body is straight.","Hold, then switch sides."],tip:"Push your hips forward slightly — don't let them sag.",e:"Bend your bottom knee on the floor."},
+  bridgemarch:{n:"Glute bridge march",t:"Legs",s:["Lift into a glute bridge.","Keep hips high and lift one foot a few inches.","Put it down and lift the other.","Don't let your hips drop or twist."],tip:"Slow is harder and better.",e:"Do regular glute bridges."},
+  wallsit:{n:"Wall sit",t:"Legs",s:["Stand with your back against a wall.","Slide down until your knees are bent about 90°.","Keep knees over ankles and back flat on the wall.","Hold."],tip:"Push through your heels and keep breathing.",e:"Don't slide down as far."},
+  inchworm:{n:"Inchworms",t:"Arms",s:["Stand tall and fold forward, hands to the floor (bend knees if needed).","Walk your hands out to a high plank.","Pause, then walk your hands back to your feet.","Roll up to standing."],tip:"Keep your belly tight in the plank.",e:"Stop halfway out."},
+  updown:{n:"Plank up-downs",t:"Arms",s:["Start in a forearm plank.","Place your right hand where your elbow was, then the left, pushing up to a high plank.","Lower back to forearms one arm at a time.","Switch which arm leads each rep."],tip:"Keep hips steady — no swaying.",e:"Do it from your knees."},
+  climber:{n:"Mountain climbers",t:"Cardio",s:["Start in a high plank.","Drive one knee toward your chest.","Quickly switch legs like running in place.","Keep your hips low."],tip:"Shoulders stay stacked over your wrists.",e:"Step the knees in slowly instead of running."},
+  legraise:{n:"Lying leg raises",t:"Core",s:["Lie on your back, hands under your hips.","Keep legs straight and lift them to point at the ceiling.","Lower slowly until just above the floor.","Keep your lower back pressed down."],tip:"Only lower as far as you can control.",e:"Bend your knees."},
+  curtsy:{n:"Curtsy lunges",t:"Legs",s:["Stand with feet hip-width apart.","Step one foot behind and across the other, like a curtsy.","Bend both knees and lower down.","Push back up and switch sides."],tip:"Keep hips facing forward.",e:"Hold a wall for balance."},
+  calf:{n:"Calf raises",t:"Legs",s:["Stand tall, feet hip-width apart.","Rise up onto the balls of your feet.","Pause at the top.","Lower slowly."],tip:"Stand on a step edge for a bigger stretch.",e:"Hold a wall."},
+  diamond:{n:"Diamond push-ups",t:"Arms",s:["Start on knees or toes, hands close together under your chest.","Make a diamond shape with thumbs and index fingers.","Lower your chest toward your hands, elbows close to your body.","Push back up."],tip:"This targets the back of your arms (triceps).",e:"Do them on your knees or against a wall."},
+  twist:{n:"Russian twists",t:"Core",s:["Sit with knees bent, feet on the floor.","Lean back slightly with a straight back.","Rotate your chest and hands to one side, then the other.","Each side counts as one rep."],tip:"Turn from your ribs, not just your arms.",e:"Keep your feet on the floor."},
+  hollow:{n:"Hollow body hold",t:"Core",s:["Lie on your back, arms overhead.","Press your lower back into the floor.","Lift your shoulders and legs off the floor.","Hold like a shallow banana shape."],tip:"Lower back must stay down — adjust to keep it there.",e:"Bend your knees and keep arms by your sides."},
+  jumpsquat:{n:"Jump squats",t:"Legs",s:["Squat down with chest up.","Explode up and jump.","Land softly with bent knees.","Go straight into the next squat."],tip:"Quiet landings protect your knees.",e:"Do fast bodyweight squats with a calf raise at the top."},
+  donkey:{n:"Donkey kicks",t:"Legs",s:["Start on hands and knees.","Keep your knee bent and lift one foot toward the ceiling.","Squeeze your glute at the top.","Lower and repeat, then switch sides."],tip:"Don't arch your back — the motion is small.",e:"Lift a little lower."},
+  flutter:{n:"Flutter kicks",t:"Core",s:["Lie on your back, hands under your hips.","Lift both legs a few inches.","Kick them up and down in small, quick movements.","Keep your lower back down."],tip:"Higher legs are easier; lower is harder.",e:"Lift legs higher."},
+  birddog:{n:"Bird dogs",t:"Core",s:["Start on hands and knees.","Reach your right arm forward and left leg back.","Hold for 2 seconds, keeping hips level.","Return and switch sides."],tip:"Imagine balancing a glass of water on your back.",e:"Move just the arm or just the leg."},
+  burpee:{n:"Burpees",t:"Cardio",s:["Squat down and place hands on the floor.","Jump or step your feet back to a plank.","Jump or step feet back to your hands.","Stand up and reach overhead (add a jump if you like)."],tip:"Keep a steady pace you can hold.",e:"Step back and in, no jump."},
+  stepup:{n:"Step-ups",t:"Legs",s:["Stand facing the bottom stair, or a sturdy low chair pushed against a wall.","Place one foot fully on it.","Push through that heel to stand on top.","Step down slowly, then repeat all reps before switching."],tip:"Let the top leg do the work — don't push off the back foot.",e:"Use a lower step, or hold the stair railing."},
+  hydrant:{n:"Fire hydrants",t:"Legs",s:["Start on hands and knees.","Keep your knee bent and lift one leg out to the side.","Lift until your thigh is about level with your hip.","Lower and repeat, then switch sides."],tip:"Keep your weight centered — don't lean away.",e:"Smaller lift."},
+  bear:{n:"Bear hold",t:"Core",s:["Start on hands and knees, hands under shoulders.","Tuck your toes and lift your knees 1–2 inches off the floor.","Keep your back flat.","Hold."],tip:"Push the floor away with your hands.",e:"Hover for 5 seconds, rest, repeat."},
+  heeltap:{n:"Heel taps",t:"Core",s:["Lie on your back, knees bent, feet flat.","Lift your shoulders slightly off the floor.","Reach one hand to touch that side's heel.","Alternate sides."],tip:"Keep your chin tucked, like holding an egg under it.",e:"Keep head down and just reach."},
+  skater:{n:"Skater hops",t:"Cardio",s:["Stand on one leg with a slight bend.","Leap sideways to land on the other foot.","Swing your back leg behind you.","Keep going side to side."],tip:"Land softly and stay low.",e:"Step side to side instead of hopping."},
+  jack:{n:"Jumping jacks",t:"Cardio",s:["Stand with feet together, arms by your sides.","Jump feet out while raising arms overhead.","Jump back to start.","Keep a steady rhythm."],tip:"Stay light on the balls of your feet.",e:"Step one foot out at a time."},
+  highknee:{n:"High knees",t:"Cardio",s:["Run in place.","Drive your knees up to hip height.","Pump your arms.","Stay on the balls of your feet."],tip:"Keep your chest tall.",e:"March with high knees instead."},
+  squatpulse:{n:"Squat pulses",t:"Legs",s:["Lower into a squat.","Stay low and pulse up and down a few inches.","Keep your chest tall.","Don't stand all the way up until time is done."],tip:"Expect the burn — that's the point.",e:"Stand up to rest briefly when needed."},
+  walk:{n:"Brisk walk (indoors or out)",t:"Cardio",s:["Walk around your neighborhood, or indoors: march in place, walk laps around your home, or go up and down the stairs.","Go fast enough that you can talk but not sing.","Swing your arms naturally.","Put on music or a show to make the time go faster."],tip:"The easiest, most underrated fat-loss habit.",e:"Split it into three 10-minute walks during the day."},
+  catcow:{n:"Cat-cow",t:"Stretch",s:["Start on hands and knees.","Breathe in: drop your belly and lift your chest (cow).","Breathe out: round your back toward the ceiling (cat).","Move slowly with your breath."],tip:"Great for a stiff back.",e:"Smaller movements."},
+  child:{n:"Child's pose",t:"Stretch",s:["Kneel and sit back on your heels.","Fold forward and stretch your arms out in front.","Rest your forehead on the floor.","Breathe slowly."],tip:"Widen your knees if it's more comfortable.",e:"Put a pillow under your chest."},
+  figure4:{n:"Figure-4 glute stretch",t:"Stretch",s:["Lie on your back, knees bent.","Cross your right ankle over your left knee.","Pull your left thigh toward you.","Hold, then switch sides."],tip:"You'll feel it deep in the hip of the crossed leg.",e:"Keep the bottom foot on the floor."},
+  hamstring:{n:"Standing hamstring stretch",t:"Stretch",s:["Put one heel forward, toes up, and bend the back knee slightly.","Hinge at the hips with a flat back.","Hold, then switch sides."],tip:"Lead with your chest, not your head.",e:"Don't hinge as far."},
+  armstretch:{n:"Tricep & shoulder stretch",t:"Stretch",s:["Reach one arm across your chest and hug it with the other.","Hold, then switch.","Then reach one hand behind your head and gently press the elbow.","Hold, then switch."],tip:"Keep shoulders relaxed.",e:"Go gently."}
+};
+
+/* No-jump versions for apartments, condos and sore knees */
+Object.assign(EX,{
+  calfsquat:{n:"Squat to calf raise",t:"Legs",s:["Squat down with your chest up.","Stand up quickly and powerfully.","At the top, rise onto your toes.","Lower your heels and go straight into the next squat."],tip:"Move fast but land nothing — your feet never leave the floor.",e:"Skip the calf raise."},
+  stepburpee:{n:"Step-back burpees",t:"Cardio",s:["Squat down and place hands on the floor.","Step one foot back, then the other, into a plank.","Step your feet back in toward your hands.","Stand up and reach your arms overhead."],tip:"Keep your belly tight in the plank.",e:"Put your hands on a chair or sofa instead of the floor."},
+  skatestep:{n:"Skater steps",t:"Cardio",s:["Stand with knees slightly bent.","Take a big step sideways with your right foot.","Sweep your left leg behind the right, touching the toes down.","Repeat to the other side, swinging your arms."],tip:"Stay low to keep your heart rate up.",e:"Take smaller steps."},
+  stepjack:{n:"Step jacks",t:"Cardio",s:["Stand with feet together, arms by your sides.","Step your right foot out while raising both arms overhead.","Step back in and lower your arms.","Repeat on the left side, and keep a quick pace."],tip:"Reach your arms all the way up for more burn.",e:"Raise your arms only to shoulder height."},
+  highmarch:{n:"Fast high-knee march",t:"Cardio",s:["March quickly in place.","Lift each knee to hip height.","Pump your arms hard.","Keep your chest tall."],tip:"Speed and arm drive make this as tough as running.",e:"Lift knees lower."}
+});
+const QUIET_SWAP = {jumpsquat:"calfsquat",burpee:"stepburpee",skater:"skatestep",jack:"stepjack",highknee:"highmarch"};
+
+/* ---------- Weekly plan (Mon → Sun) ---------- */
+const WARMUP = {title:"Warm-up",kind:"warmup",meta:"Once through, no rest",items:[["march","60 sec"],["armcircle","30 sec"],["hipcircle","30 sec"],["squat","10 reps"]]};
+const COOLDOWN = {title:"Cool-down",kind:"cooldown",meta:"Hold each stretch",items:[["hamstring","30 sec each"],["figure4","30 sec each"],["armstretch","30 sec each"],["child","45 sec"]]};
+
+const PLAN = [
+  {name:"Monday",title:"Full body kickoff",focus:"A balanced start: squats and bridges for legs, push-ups and dips for arms, and a plank to wake up your core.",
+   circuit:[["squat","15 reps"],["kneepush","10 reps"],["bridge","15 reps"],["dip","12 reps"],["plank","30 sec"],["bicycle","20 reps"]],
+   finisher:[["jack","45 sec"]]},
+  {name:"Tuesday",title:"Lunge & sculpt",focus:"Single-leg work for lean legs, shoulder taps for toned arms, and slow core moves that protect your back.",
+   circuit:[["rlunge","12 each leg"],["shouldertap","20 reps"],["sumo","15 reps"],["superman","12 reps"],["deadbug","10 each side"],["sideplank","20 sec each"]],
+   finisher:[["highknee","30 sec"]]},
+  {name:"Wednesday",title:"Glutes & burn",focus:"Glute-focused legs, full-body arm moves, and a mountain-climber core burn to get your heart rate up.",
+   circuit:[["bridgemarch","20 reps"],["inchworm","8 reps"],["wallsit","40 sec"],["updown","10 reps"],["climber","30 sec"],["legraise","12 reps"]],
+   finisher:[["squatpulse","40 sec"]]},
+  {name:"Thursday",title:"Tone it up",focus:"Curtsy lunges and calves for shape, diamond push-ups for the back of the arms, and twisting core work for your waist.",
+   circuit:[["curtsy","10 each side"],["diamond","8 reps"],["calf","20 reps"],["armcircle","45 sec"],["twist","20 reps"],["hollow","20 sec"]],
+   finisher:[["jack","45 sec"]]},
+  {name:"Friday",title:"Power day",focus:"The most energetic day of the week: explosive squats, burpees and fast core work to finish strong.",
+   circuit:[["jumpsquat","12 reps"],["dip","12 reps"],["donkey","15 each side"],["shouldertap","20 reps"],["flutter","30 sec"],["birddog","10 each side"]],
+   finisher:[["burpee","8 reps"]]},
+  {name:"Saturday",title:"Mix it up",focus:"Step-ups and fire hydrants for legs and hips, full push-ups for arms, and holds that build a strong, flat core.",
+   circuit:[["stepup","12 each leg"],["pushup","8 reps"],["hydrant","12 each side"],["bear","20 sec"],["heeltap","20 reps"],["plank","40 sec"]],
+   finisher:[["skater","30 sec"]]},
+  {name:"Sunday",title:"Active recovery",focus:"Your muscles get leaner while they rest. Walk, stretch, and do a little gentle core work.",
+   circuit:[["walk","30 min"],["catcow","10 reps"],["deadbug","8 each side"],["birddog","8 each side"]],
+   finisher:null, rest:true}
+];
+
+const ROUNDS = {1:2,2:3,3:4};
+const REST = {1:"Rest 30 sec between moves, 90 sec between rounds",2:"Rest 20 sec between moves, 60 sec between rounds",3:"Rest 15 sec between moves, 45 sec between rounds"};
+const FIN_ROUNDS = {1:2,2:3,3:4};
+const MINUTES = {1:"20–25",2:"30–35",3:"40–45"};
+const TAGCOLOR = {Core:"var(--core)",Legs:"var(--legs)",Arms:"var(--arms)",Cardio:"var(--cardio)",Stretch:"var(--stretch)"};
+
+const ICON = {
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>',
+  timer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'
+};
+
+/* ---------- Storage (safe) ---------- */
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+
+/* ---------- Dates ---------- */
+const dayStamp = d => d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+const today = new Date(); today.setHours(0,0,0,0);
+const todayIdx = (today.getDay()+6)%7; // Mon = 0
+const monday = new Date(today); monday.setDate(today.getDate()-todayIdx);
+const dateOf = i => {const d=new Date(monday);d.setDate(monday.getDate()+i);return d};
+const keyOf = i => "dl:"+dayStamp(dateOf(i));
+
+let level = store.get("dl:level",1);
+let selected = todayIdx;
+let quiet = store.get("dl:quiet",false);
+const swap = items => quiet ? items.map(([id,amt])=>[QUIET_SWAP[id]||id,amt]) : items;
+
+/* ---------- Build a day ---------- */
+function blocksFor(i){
+  const p=PLAN[i], out=[{...WARMUP,kind:"warmup",items:swap(WARMUP.items)}];
+  if(p.rest){
+    out.push({title:"Recovery",kind:"circuit",meta:"Once through, at an easy pace",items:swap(p.circuit)});
+  }else{
+    out.push({title:"Main circuit",kind:"circuit",meta:`Repeat ${ROUNDS[level]} times. ${REST[level]}.`,items:swap(p.circuit)});
+    out.push({title:"Fat-burn finisher",kind:"finisher",meta:`Repeat ${FIN_ROUNDS[level]} times, 20 sec rest between`,items:swap(p.finisher)});
+  }
+  out.push({...COOLDOWN,kind:"cooldown",meta:"Hold each stretch and breathe slowly"});
+  return out;
+}
+const totalFor = i => blocksFor(i).reduce((a,b)=>a+b.items.length,0);
+const isComplete = i => store.get(keyOf(i),[]).length>=totalFor(i);
+const parseTime = amt => {const s=/(\d+)\s*sec/.exec(amt), m=/(\d+)\s*min/.exec(amt);return s?+s[1]:(m?+m[1]*60:0)};
+const fmt = t => `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+const yt = n => "https://www.youtube.com/results?search_query="+encodeURIComponent("how to do "+n+" proper form");
+
+/* ---------- Render ---------- */
+const $ = id => document.getElementById(id);
+
+function renderWeek(){
+  $("week").innerHTML = PLAN.map((p,i)=>{
+    const d=dateOf(i), done=isComplete(i);
+    return `<button class="day-btn${i===todayIdx?" today":""}${done?" complete":""}" data-i="${i}" aria-pressed="${i===selected}"
+      aria-label="${p.name} ${d.getDate()}${i===todayIdx?", today":""}${done?", finished":""}">
+      <span class="d">${p.name.slice(0,3)}</span><span class="n">${d.getDate()}</span><span class="mark"></span></button>`;
+  }).join("");
+}
+
+function renderDay(){
+  const p=PLAN[selected], d=dateOf(selected);
+  const dateStr=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  $("when").textContent = selected===todayIdx ? `Today, ${dateStr}` : dateStr;
+  $("title").textContent = p.title;
+  $("focus").textContent = p.focus;
+  $("facts").innerHTML = p.rest
+    ? `<li><b>~45</b>min</li><li><b>${totalFor(selected)}</b>moves</li><li>Same at every level</li>`
+    : `<li><b>${MINUTES[level]}</b>min</li><li><b>${totalFor(selected)}</b>moves</li><li><b>${ROUNDS[level]}</b>rounds</li>`;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.level===level)));
+
+  const checked=new Set(store.get(keyOf(selected),[]));
+  $("blocks").innerHTML = blocksFor(selected).map(b=>{
+    const doneHere=b.items.filter((_,xi)=>checked.has(`${b.kind}-${xi}`)).length;
+    return `<section class="block" data-kind="${b.kind}">
+      <div class="block-head">
+        <div class="row"><h2>${b.title}</h2><span class="tally">${doneHere}/${b.items.length}</span></div>
+        <p class="meta">${b.meta}</p>
+      </div>
+      <div class="list">
+      ${b.items.map(([id,amt],xi)=>{
+        const e=EX[id], uid=`${b.kind}-${xi}`, done=checked.has(uid), time=parseTime(amt);
+        const cid=`c-${uid}`, hid=`h-${uid}`;
+        return `<article class="ex${done?" is-done":""}" data-uid="${uid}" data-name="${e.n}" style="--tc:${TAGCOLOR[e.t]}">
+          <div class="ex-main">
+            <label class="check-wrap" for="${cid}"><input id="${cid}" type="checkbox" class="check"${done?" checked":""} aria-label="Mark ${e.n} done"></label>
+            <div class="ex-text"><p class="ex-name">${e.n}</p><span class="tag">${e.t}</span></div>
+            <div class="amount">${amt}</div>
+          </div>
+          <div class="ex-actions${time?" two":""}">
+            <button class="btn how-btn" aria-expanded="false" aria-controls="${hid}">${ICON.book}<span>How to</span></button>
+            ${time?`<button class="btn primary timer" data-s="${time}">${ICON.timer}<span>${time>=60?Math.round(time/60)+" min":time+" sec"} timer</span></button>`:""}
+          </div>
+          <div class="how" id="${hid}"><div>
+            <div class="how-inner">
+              <ol class="steps">${e.s.map(s=>`<li><span>${s}</span></li>`).join("")}</ol>
+              <p><strong>Tip:</strong> ${e.tip}</p>
+              <p><strong>Easier version:</strong> ${e.e}</p>
+              <p><a href="${yt(e.n)}" target="_blank" rel="noopener">${ICON.play} Watch a video tutorial</a></p>
+            </div>
+          </div></div>
+        </article>`;}).join("")}
+      </div>
+    </section>`;}).join("");
+  updateProgress();
+}
+
+function updateProgress(){
+  const total=totalFor(selected), list=store.get(keyOf(selected),[]), n=list.length;
+  const pct=Math.min(100,Math.round(n/total*100));
+  $("bar").querySelector("span").style.width=pct+"%";
+  $("bar").setAttribute("aria-valuenow",pct);
+  $("bar").classList.toggle("full",pct===100);
+  $("count").textContent=`${n}/${total} done`;
+  $("doneBanner").classList.toggle("show",pct===100);
+  const set=new Set(list);
+  document.querySelectorAll(".block").forEach(sec=>{
+    const items=sec.querySelectorAll(".ex");
+    const d=[...items].filter(x=>set.has(x.dataset.uid)).length;
+    sec.querySelector(".tally").textContent=`${d}/${items.length}`;
+  });
+}
+
+/* ---------- Events ---------- */
+$("week").addEventListener("click",e=>{
+  const b=e.target.closest(".day-btn"); if(!b) return;
+  selected=+b.dataset.i; stopTimer(); renderWeek(); renderDay();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+document.querySelector(".seg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  level=+b.dataset.level; store.set("dl:level",level); renderDay(); renderWeek();
+});
+$("quietToggle").checked=quiet;
+$("quietToggle").addEventListener("change",e=>{
+  quiet=e.target.checked; store.set("dl:quiet",quiet); stopTimer(); renderDay();
+});
+function setDone(ex,val){
+  const k=keyOf(selected), set=new Set(store.get(k,[]));
+  val?set.add(ex.dataset.uid):set.delete(ex.dataset.uid);
+  store.set(k,[...set]);
+  ex.classList.toggle("is-done",val);
+  ex.querySelector(".check").checked=val;
+  updateProgress(); renderWeek();
+  if(val && navigator.vibrate) navigator.vibrate(15);
+}
+$("blocks").addEventListener("change",e=>{
+  if(e.target.classList.contains("check")) setDone(e.target.closest(".ex"),e.target.checked);
+});
+$("blocks").addEventListener("click",e=>{
+  const how=e.target.closest(".how-btn");
+  if(how){
+    const panel=how.closest(".ex").querySelector(".how"), open=!panel.classList.contains("open");
+    panel.classList.toggle("open",open);
+    how.setAttribute("aria-expanded",String(open));
+    how.querySelector("span").textContent=open?"Hide":"How to";
+    return;
+  }
+  const t=e.target.closest(".timer");
+  if(t){
+    const ex=t.closest(".ex");
+    if(timer && timer.ex===ex){stopTimer();return;}
+    startTimer(ex,+t.dataset.s,t);
+  }
+});
+
+/* ---------- Timer sheet ---------- */
+let timer=null;
+function startTimer(ex,secs,btn){
+  stopTimer();
+  timer={ex,btn,total:secs,left:secs,paused:false,label:btn.querySelector("span").textContent};
+  btn.classList.add("running"); btn.querySelector("span").textContent="Running…";
+  $("sheetName").textContent=ex.dataset.name;
+  $("sheetPause").textContent="Pause";
+  paintTimer();
+  $("sheet").classList.add("open"); document.body.classList.add("timer-open");
+  timer.id=setInterval(tick,1000);
+}
+function tick(){
+  if(!timer||timer.paused) return;
+  timer.left--;
+  paintTimer();
+  if(timer.left<=0){
+    const ex=timer.ex; beep();
+    $("sheetName").textContent="Done! "+ex.dataset.name;
+    clearInterval(timer.id);
+    setTimeout(()=>{ if(timer && timer.ex===ex){ stopTimer(); if(!ex.querySelector(".check").checked) setDone(ex,true);} },1200);
+  }
+}
+function paintTimer(){
+  $("sheetTime").textContent=fmt(Math.max(0,timer.left));
+  $("sheetBar").style.width=(timer.left/timer.total*100)+"%";
+}
+function stopTimer(){
+  if(!timer) return;
+  clearInterval(timer.id);
+  if(timer.btn.isConnected){timer.btn.classList.remove("running");timer.btn.querySelector("span").textContent=timer.label;}
+  timer=null;
+  $("sheet").classList.remove("open"); document.body.classList.remove("timer-open");
+}
+$("sheetPause").addEventListener("click",()=>{
+  if(!timer) return; timer.paused=!timer.paused;
+  $("sheetPause").textContent=timer.paused?"Resume":"Pause";
+});
+$("sheetStop").addEventListener("click",stopTimer);
+function beep(){
+  try{const a=new (window.AudioContext||window.webkitAudioContext)();
+    [0,.25,.5].forEach(s=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=880;o.connect(g);g.connect(a.destination);
+      g.gain.setValueAtTime(.2,a.currentTime+s);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+s+.2);o.start(a.currentTime+s);o.stop(a.currentTime+s+.2);});
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+
+/* ---------- Misc ---------- */
+$("reset").addEventListener("click",()=>{
+  if(!confirm("Clear all checkmarks for this week?")) return;
+  for(let i=0;i<7;i++) store.del(keyOf(i));
+  renderWeek(); renderDay();
+});
+const topbar=$("topbar");
+window.addEventListener("scroll",()=>topbar.classList.toggle("scrolled",window.scrollY>8),{passive:true});
+
+/* Switch to the new day automatically after midnight */
+const loadedStamp=dayStamp(new Date());
+function checkNewDay(){ if(dayStamp(new Date())!==loadedStamp && !timer) location.reload(); }
+setInterval(checkNewDay,60000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) checkNewDay(); });
+
+renderWeek(); renderDay();
+</script>
+</body>
+</html>
